@@ -1,5 +1,7 @@
 ---
-title: "About This Website"
+title: "About me"
 ---
 
-More about this website.
+My name is Karol Pogorzelski. I hold a PhD in economics from University in Warsaw and currently work as an economist at ING in Poland. 
+
+I frequently deal with survey data, typically within R environment. I have recently discovered that despite breadth of R community expertize there is little materials on exploration, transforation, analysis and plotting this type of data (weighted and often categorical variables). I would like to fill this gap and share some tips and solutions. I hope that they will be of use to someone out there. Especially to social scientists who'd like to switch from SPSS to R. 

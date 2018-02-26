@@ -1,13 +1,35 @@
 ---
-title: "Homepage"
+title: "Miscellanea"
 ---
 
-## How to tabulate weighted frequencies of various answers to a survey question
+## How to tabulate frequencies of a survey answers (weighted)
 
-Work in progress... 
+The survey data often take the following form: 
 
-```{r cars}
+```{r cars, eval=FALSE, include=FALSE}
 summary(cars)
+```
+
+When exploring such data I often like to have a look at the frequencies of particualar answers to survey question, broken down by respondent's country, sex, age or any other available variable. 
+
+Fortunately, there is an R package "weight", which contains a function wpct, which was designed to do exactly that. Let's have a look on how does it work.
+
+```{r data, eval=FALSE, include=FALSE}
+data <- read_csv("Dane/ING_2017_WAVE_19.csv", na = "")
+question <- 'G9_s1'
+
+data_1 <- data[,c('Country','P2', 'WeightPerCountry',  question)]
+
+answers <- names(wpct(data_1$G9_s1, weight = data_1$WeightPerCountry)) # tytuły kolumn w docelowej ramce danych
+
+# Stworzenie tablicy ważonej częstości poszczególnych odpowiedzi w robiciu na kraje
+
+data_1 <- data_1 %>% 
+  group_by(Country) %>%
+  do(as.data.frame(wpct(.$G9_s1, .$WeightPerCountry, na.rm = TRUE))) %>%
+  mutate(answers = answers) %>% 
+  group_by(Country) %>% 
+  spread(key = answers, `wpct(.$G9_s1, .$WeightPerCountry, na.rm = TRUE)`)
 ```
 
 ## A Plot

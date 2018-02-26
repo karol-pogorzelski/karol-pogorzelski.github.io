@@ -11,7 +11,7 @@
 
 
 
-<title>Homepage</title>
+<title>Miscellanea</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -196,22 +196,16 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Homepage</h1>
+<h1 class="title toc-ignore">Miscellanea</h1>
 
 </div>
 
 
-<div id="how-to-tabulate-weighted-frequencies-of-various-answers-to-a-survey-question" class="section level2">
-<h2>How to tabulate weighted frequencies of various answers to a survey question</h2>
-<p>Work in progress…</p>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
+<div id="how-to-tabulate-frequencies-of-a-survey-answers-weighted" class="section level2">
+<h2>How to tabulate frequencies of a survey answers (weighted)</h2>
+<p>The survey data often take the following form:</p>
+<p>When exploring such data I often like to have a look at the frequencies of particualar answers to survey question, broken down by respondent’s country, sex, age or any other available variable.</p>
+<p>Fortunately, there is an R package “weight”, which contains a function wpct, which was designed to do exactly that. Let’s have a look on how does it work.</p>
 </div>
 <div id="a-plot" class="section level2">
 <h2>A Plot</h2>

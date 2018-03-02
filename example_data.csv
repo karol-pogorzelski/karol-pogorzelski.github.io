@@ -1,0 +1,6 @@
+id,weight,gender,age ,question_1,question_2,...
+1,1.12,male,20,agree,agree, 
+2,0.98,male,26,very agree,very disagree, 
+3,1.022,female,34,agree,agree, 
+4,1.071,female,21,"neigher agree, nor disagree",agree, 
+5,0.943,male,54,disagree,agree, 

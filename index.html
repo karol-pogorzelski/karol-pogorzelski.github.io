@@ -11,7 +11,7 @@
 
 
 
-<title>Miscellanea</title>
+<title>Analyzing survey data with R</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -174,7 +174,7 @@ $(document).ready(function () {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">My Website</a>
+      <a class="navbar-brand" href="index.html">Miscellanea blog</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -196,22 +196,188 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Miscellanea</h1>
+<h1 class="title toc-ignore">Analyzing survey data with R</h1>
 
 </div>
 
 
-<div id="how-to-tabulate-frequencies-of-a-survey-answers-weighted" class="section level2">
-<h2>How to tabulate frequencies of a survey answers (weighted)</h2>
-<p>The survey data often take the following form:</p>
-<p>When exploring such data I often like to have a look at the frequencies of particualar answers to survey question, broken down by respondent’s country, sex, age or any other available variable.</p>
-<p>Fortunately, there is an R package “weight”, which contains a function wpct, which was designed to do exactly that. Let’s have a look on how does it work.</p>
-</div>
-<div id="a-plot" class="section level2">
-<h2>A Plot</h2>
-<p>You can also embed plots, for example:</p>
-<p><img src="index_files/figure-html/pressure-1.png" width="672" /></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+<div id="how-to-tabulate-in-r-frequencies-of-a-survey-answers-weighted" class="section level2">
+<h2>How to tabulate in R frequencies of a survey answers (weighted)</h2>
+<p>When exploring survey data I often like to have a look at the frequencies of answers to particular questions, broken down by respondent’s country, sex, age or any other variable at hand. Howver, this task ain’t that simple, as survey data are often coded in very inconvenient way, for instance:</p>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+id
+</th>
+<th style="text-align:right;">
+weight
+</th>
+<th style="text-align:left;">
+gender
+</th>
+<th style="text-align:right;">
+age
+</th>
+<th style="text-align:left;">
+question_1
+</th>
+<th style="text-align:left;">
+question_2
+</th>
+<th style="text-align:left;">
+…
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1.120
+</td>
+<td style="text-align:left;">
+male
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:left;">
+agree
+</td>
+<td style="text-align:left;">
+agree
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0.980
+</td>
+<td style="text-align:left;">
+male
+</td>
+<td style="text-align:right;">
+26
+</td>
+<td style="text-align:left;">
+very agree
+</td>
+<td style="text-align:left;">
+very disagree
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1.022
+</td>
+<td style="text-align:left;">
+female
+</td>
+<td style="text-align:right;">
+34
+</td>
+<td style="text-align:left;">
+agree
+</td>
+<td style="text-align:left;">
+agree
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1.071
+</td>
+<td style="text-align:left;">
+female
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:left;">
+neigher agree, nor disagree
+</td>
+<td style="text-align:left;">
+agree
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+0.943
+</td>
+<td style="text-align:left;">
+male
+</td>
+<td style="text-align:right;">
+54
+</td>
+<td style="text-align:left;">
+disagree
+</td>
+<td style="text-align:left;">
+agree
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<p>With other types of data you would normally render table of frequencies with sort of the following code:</p>
+<pre class="r"><code>data %&gt;% 
+  count(question_1) %&gt;% 
+  mutate(prop = prop.table(n))</code></pre>
+<p>However, the characteristic feature of surveys is that each observation is assigned a unique weight (so that the sample of respondents reflects the structure of relevant population). One needs to multiply each variable by relevant weights to obtain correct averages, frequencies and other statisics. But how would you do that with character variable? Solution seems simple - create dummy variables for each level of character variable (“strongly”, “agree”, etc.) and multiply them by weights. However, coding this in R is a bit tedious.</p>
+<p>Fortunately, there is an easier solution, namely “weights” package, which contains a function <em>wpct</em>, which was designed to do exactly that. Let’s have a look on how does it work.</p>
+<pre class="r"><code># Let&#39;s save the list of answers to variable, for later use. 
+answers &lt;- names(wpct(data$Question, weight = data$Weight))
+
+# We need to apply wpct to each answer and each group separately. Fortunately wpct works with margritr pips, so we don&#39;t need to resolve to loops. 
+
+freq_table &lt;- data %&gt;% 
+  group_by(Gender) %&gt;%
+  do(as.data.frame(wpct(.$Question, .$Weight, na.rm = TRUE))) %&gt;%
+  mutate(answers = answers)
+
+# Now let&#39;s do few finishing touches: change ugly default name of second column and spread the table to make comparisons easier. 
+
+names(freq_table)[2] &lt;- &quot;frequency&quot;
+freq_table &lt;- freq_table %&gt;% 
+  spread(key = answers, &quot;frequency&quot;)
+
+# And voila...
+freq_table</code></pre>
+<pre><code>## # A tibble: 2 x 6
+## # Groups:   Gender [2]
+##   Gender `Most of the time`     No Rarely Sometimes   Yes
+##   &lt;chr&gt;               &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;
+## 1 Man                 0.443 0.0222 0.0802     0.280 0.175
+## 2 Woman               0.461 0.0121 0.0658     0.307 0.155</code></pre>
 </div>
 
 

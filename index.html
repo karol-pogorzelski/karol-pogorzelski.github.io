@@ -203,181 +203,159 @@ $(document).ready(function () {
 
 <div id="how-to-tabulate-in-r-frequencies-of-a-survey-answers-weighted" class="section level2">
 <h2>How to tabulate in R frequencies of a survey answers (weighted)</h2>
-<p>When exploring survey data I often like to have a look at the frequencies of answers to particular questions, broken down by respondent’s country, sex, age or any other variable at hand. Howver, this task ain’t that simple, as survey data are often coded in very inconvenient way, for instance:</p>
+<p>When exploring survey data I often like to have a look at the frequencies of answers to particular questions, broken down by respondent’s country, sex, age or any other variable at hand. However, this task isn’t that simple, as survey data are often coded in very inconvenient way, for instance:</p>
 <table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
-<th style="text-align:right;">
-id
-</th>
-<th style="text-align:right;">
-weight
-</th>
 <th style="text-align:left;">
-gender
+Gender
 </th>
 <th style="text-align:right;">
-age
+Weight
 </th>
 <th style="text-align:left;">
-question_1
-</th>
-<th style="text-align:left;">
-question_2
-</th>
-<th style="text-align:left;">
-…
+Question
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-1.120
-</td>
 <td style="text-align:left;">
-male
+Man
 </td>
 <td style="text-align:right;">
-20
+1.01
 </td>
 <td style="text-align:left;">
-agree
-</td>
-<td style="text-align:left;">
-agree
-</td>
-<td style="text-align:left;">
-NA
+Agree
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.980
-</td>
 <td style="text-align:left;">
-male
+Man
 </td>
 <td style="text-align:right;">
-26
+0.87
 </td>
 <td style="text-align:left;">
-very agree
-</td>
-<td style="text-align:left;">
-very disagree
-</td>
-<td style="text-align:left;">
-NA
+Strongly disagree
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-1.022
-</td>
 <td style="text-align:left;">
-female
+Man
 </td>
 <td style="text-align:right;">
-34
+0.99
 </td>
 <td style="text-align:left;">
-agree
-</td>
-<td style="text-align:left;">
-agree
-</td>
-<td style="text-align:left;">
-NA
+Neither agree nor disagree
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-1.071
-</td>
 <td style="text-align:left;">
-female
+Woman
 </td>
 <td style="text-align:right;">
-21
+0.98
 </td>
 <td style="text-align:left;">
-neigher agree, nor disagree
-</td>
-<td style="text-align:left;">
-agree
-</td>
-<td style="text-align:left;">
-NA
+Strongly disagree
 </td>
 </tr>
 <tr>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.943
-</td>
 <td style="text-align:left;">
-male
+Woman
 </td>
 <td style="text-align:right;">
-54
+0.97
 </td>
 <td style="text-align:left;">
-disagree
+Neither agree nor disagree
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Woman
+</td>
+<td style="text-align:right;">
+0.98
 </td>
 <td style="text-align:left;">
-agree
-</td>
-<td style="text-align:left;">
-NA
+Disagree
 </td>
 </tr>
 </tbody>
 </table>
 <p>With other types of data you would normally render table of frequencies with sort of the following code:</p>
 <pre class="r"><code>data %&gt;% 
-  count(question_1) %&gt;% 
+  count(Question) %&gt;% 
   mutate(prop = prop.table(n))</code></pre>
 <p>However, the characteristic feature of surveys is that each observation is assigned a unique weight (so that the sample of respondents reflects the structure of relevant population). One needs to multiply each variable by relevant weights to obtain correct averages, frequencies and other statisics. But how would you do that with character variable? Solution seems simple - create dummy variables for each level of character variable (“strongly”, “agree”, etc.) and multiply them by weights. However, coding this in R is a bit tedious.</p>
-<p>Fortunately, there is an easier solution, namely “weights” package, which contains a function <em>wpct</em>, which was designed to do exactly that. Let’s have a look on how does it work.</p>
-<pre class="r"><code># Let&#39;s save the list of answers to variable, for later use. 
+<p>Fortunately, there is an easier solution, namely “weights” package, which contains a function <em>wpct</em>, which was designed to do exactly that. Its syntax is quite straightforward. You just need to pass relevant column of data and specify column with weights. For more legibility you may want to define the output as dataframe and convert fractions to percentages:</p>
+<pre class="r"><code>freq_table &lt;- data$Question %&gt;% 
+              wpct(data$Weight) %&gt;%
+              as.data.frame()
+
+freq_table$. &lt;- freq_table$. %&gt;% percent()
+freq_table</code></pre>
+<pre><code>##                                .
+## Agree                      22.0%
+## Disagree                   17.9%
+## Neither agree nor disagree 37.2%
+## Strongly agree              6.6%
+## Strongly disagree          16.2%</code></pre>
+<p>Now, let’s complicate things a bit. I suppose we would like to see how these percentages differ for various subpopulations, in our example: men vs women.</p>
+<pre class="r"><code># First let&#39;s save a list of answers to variable, for later use. 
 answers &lt;- names(wpct(data$Question, weight = data$Weight))
 
-# We need to apply wpct to each answer and each group separately. Fortunately wpct works with margritr pips, so we don&#39;t need to resolve to loops. 
+# We need to apply wpct to each answer and each group separately. Fortunately, with a little trick we can pass wpct into margritr pipes, so we don&#39;t need to resolve to loops. The trick is to use &quot;do&quot; function.   
 
 freq_table &lt;- data %&gt;% 
   group_by(Gender) %&gt;%
   do(as.data.frame(wpct(.$Question, .$Weight, na.rm = TRUE))) %&gt;%
   mutate(answers = answers)
 
-# Now let&#39;s do few finishing touches: change ugly default name of second column and spread the table to make comparisons easier. 
+# Now let&#39;s do few finishing touches: (1) change ugly default name of second column, (2) convert fractions to percents and (3) spread the table to make comparisons easier. 
 
 names(freq_table)[2] &lt;- &quot;frequency&quot;
+freq_table$frequency &lt;- freq_table$frequency %&gt;% percent()
+
 freq_table &lt;- freq_table %&gt;% 
   spread(key = answers, &quot;frequency&quot;)
 
 # And voila...
-freq_table</code></pre>
-<pre><code>## # A tibble: 2 x 6
-## # Groups:   Gender [2]
-##   Gender `Most of the time`     No Rarely Sometimes   Yes
-##   &lt;chr&gt;               &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;
-## 1 Man                 0.443 0.0222 0.0802     0.280 0.175
-## 2 Woman               0.461 0.0121 0.0658     0.307 0.155</code></pre>
+kable(freq_table)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Gender</th>
+<th align="left">Agree</th>
+<th align="left">Disagree</th>
+<th align="left">Neither agree nor disagree</th>
+<th align="left">Strongly agree</th>
+<th align="left">Strongly disagree</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Man</td>
+<td align="left">22.1%</td>
+<td align="left">17.7%</td>
+<td align="left">35.6%</td>
+<td align="left">6.5%</td>
+<td align="left">18.1%</td>
+</tr>
+<tr class="even">
+<td align="left">Woman</td>
+<td align="left">22.0%</td>
+<td align="left">18.1%</td>
+<td align="left">38.9%</td>
+<td align="left">6.7%</td>
+<td align="left">14.2%</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 

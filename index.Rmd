@@ -10,7 +10,9 @@ When exploring survey data I often like to have a look at the frequencies of ans
 library(knitr)
 library(kableExtra)
 kable(slice(data, 100:105), "html") %>% 
-  kable_styling(bootstrap_options = "striped", full_width = F)
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE, 
+                position = "left")
 ```
 
 With other types of data you would normally render table of frequencies with sort of the following code:
@@ -20,7 +22,7 @@ data %>%
   count(Question) %>% 
   mutate(prop = prop.table(n))
 ```
-However, the characteristic feature of surveys is that each observation is assigned a unique weight (so that the sample of respondents reflects the structure of relevant population). One needs to multiply each variable by relevant weights to obtain correct averages, frequencies and other statisics. But how would you do that with character variable? Solution seems simple - create dummy variables for each level of character variable ("strongly", "agree", etc.) and multiply them by weights. However, coding this in R is a bit tedious.
+However, the characteristic feature of surveys is that each observation is assigned a unique weight, so the sample of respondents reflects the structure of relevant population. One needs to multiply each variable by relevant weights to obtain correct averages, frequencies and other statisics. But how would you do that with character variable? Solution seems simple - create dummy variables for each level of character variable ("strongly", "agree", etc.) and multiply them by weights. However, coding this in R is a bit tedious.
 
 Fortunately, there is an easier solution, namely "weights" package, which contains a function *wpct*, which was designed to do exactly that. Its syntax is quite straightforward. You just need to pass relevant column of data and specify column with weights. For more legibility you may want to define the output as dataframe and convert fractions to percentages:
 ```{r, eval = TRUE, include = TRUE, echo = TRUE}
@@ -31,26 +33,30 @@ freq_table <- data$Question %>%
 freq_table$. <- freq_table$. %>% percent()
 freq_table
 ```
-Now, let's complicate things a bit. I suppose we would like to see how these percentages differ for various subpopulations, in our example: men vs women.  
+Now, let's complicate things a bit. I suppose we would like to see how these percentages differ for various subpopulations, in our example: men vs women. First let's save a list of answers to variable, for later use.  
 ```{r, eval = TRUE, include = TRUE, echo = TRUE}
-# First let's save a list of answers to variable, for later use. 
 answers <- names(wpct(data$Question, weight = data$Weight))
+```
 
-# We need to apply wpct to each answer and each group separately. Fortunately, with a little trick we can pass wpct into margritr pipes, so we don't need to resolve to loops. The trick is to use "do" function.   
-
+We need to apply wpct to each answer and each group separately. Fortunately, with a little trick we can pass wpct into margritr pipes, so we don't need to resolve to loops. The trick is to use "do" function.   
+```{r, eval = TRUE, include = TRUE, echo = TRUE}
 freq_table <- data %>% 
   group_by(Gender) %>%
   do(as.data.frame(wpct(.$Question, .$Weight, na.rm = TRUE))) %>%
   mutate(answers = answers)
-
-# Now let's do few finishing touches: (1) change ugly default name of second column, (2) convert fractions to percents and (3) spread the table to make comparisons easier. 
-
+```
+Now let's do few finishing touches: (1) change ugly default name of second column, (2) convert fractions to percents and (3) spread the table to make comparisons easier. 
+```{r, eval = TRUE, include = TRUE, echo = TRUE}
 names(freq_table)[2] <- "frequency"
 freq_table$frequency <- freq_table$frequency %>% percent()
 
 freq_table <- freq_table %>% 
   spread(key = answers, "frequency")
-
-# And voila...
-kable(freq_table)
+```
+And voila...
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(freq_table, "html") %>% 
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE, 
+                position = "left")
 ```

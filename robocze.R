@@ -36,6 +36,7 @@ freq_table <- data %>%
   mutate(answers = answers)
 
 names(freq_table)[2] <- "frequency"
+freq_table$frequency <- freq_table$frequency %>% percent()
 
 freq_table <- freq_table %>% 
   spread(key = answers, "frequency")

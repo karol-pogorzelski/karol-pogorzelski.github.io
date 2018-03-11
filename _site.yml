@@ -1,14 +1,17 @@
-name: "my-website"
+name: my-website
 navbar:
-  title: "Miscellanea blog"
+  title: Miscellanea blog
   left:
-    - text: "Home"
-      href: index.html
-    - text: "About"
-      href: about.html
+  - text: Home
+    href: index.html
+  - text: About
+    href: about.html
 output:
   html_document:
     theme: cosmo
     highlight: textmate
     css: styles.css
-output_dir: "."
+    lib_dir: site_libs
+    self_contained: no
+output_dir: '.'
+

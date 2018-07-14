@@ -9,7 +9,7 @@ When exploring survey data I often like to have a look at the frequencies of ans
 ```{r example_data, eval=TRUE, include=TRUE, echo=FALSE}
 library(knitr)
 library(kableExtra)
-kable(slice(data, 100:105), "html") %>% 
+kable(data[100:105,], "html") %>% 
   kable_styling(bootstrap_options = "striped", 
                 full_width = FALSE, 
                 position = "left")

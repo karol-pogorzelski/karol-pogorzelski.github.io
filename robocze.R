@@ -53,3 +53,16 @@ freq_table <- data %>%
   group_by(Gender) %>%
   do(as.data.frame(wpct(.$Question, .$Weight, na.rm = TRUE))) %>%
   mutate(answers = answers)
+
+
+```{r eval = TRUE, include = TRUE, echo = TRUE}
+freq_table_long <- freq_table %>% 
+  gather(key = "key", value = "value", 2:6, - Gender)
+```
+to obtain:
+  ```{r message = FALSE, include = TRUE}
+kable(freq_table_long, "html") %>% 
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE, 
+                position = "left")
+```

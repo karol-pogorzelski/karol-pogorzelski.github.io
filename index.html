@@ -186,6 +186,9 @@ $(document).ready(function () {
   <a href="index.html">Home</a>
 </li>
 <li>
+  <a href="plots.html">Likert plots</a>
+</li>
+<li>
   <a href="about.html">About</a>
 </li>
       </ul>
@@ -206,7 +209,7 @@ $(document).ready(function () {
 
 
 <div id="how-to-tabulate-in-r-frequencies-of-a-survey-answers-weighted" class="section level2">
-<h2>How to tabulate in R frequencies of a survey answers (weighted)</h2>
+<h2>1. How to tabulate in R frequencies of a survey answers (weighted)</h2>
 <p>When exploring survey data I often like to have a look at the frequencies of answers to particular questions, broken down by respondent’s country, sex, age or any other variable at hand. However, this task isn’t that simple, as survey data are often coded in very inconvenient way, for instance:</p>
 <table class="table table-striped" style="width: auto !important; ">
 <thead>
@@ -298,27 +301,32 @@ Disagree
 <p>However, the characteristic feature of surveys is that each observation is assigned a unique weight, so the sample of respondents reflects the structure of relevant population. One needs to multiply each variable by relevant weights to obtain correct averages, frequencies and other statisics. But how would you do that with character variable? Solution seems simple - create dummy variables for each level of character variable (“strongly”, “agree”, etc.) and multiply them by weights. However, coding this in R is a bit tedious.</p>
 <p>Fortunately, there is an easier solution, namely “weights” package, which contains a function <em>wpct</em>, which was designed to do exactly that. Its syntax is quite straightforward. You just need to pass relevant column of data and specify column with weights. For more legibility you may want to define the output as dataframe and convert fractions to percentages:</p>
 <pre class="r"><code>freq_table &lt;- data$Question %&gt;% 
-              wpct(data$Weight) %&gt;%
-              as.data.frame()
-
-freq_table$. &lt;- freq_table$. %&gt;% percent()
+              wpct(data$WeightPerCountry) %&gt;%
+              as.data.frame()</code></pre>
+<pre><code>## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.</code></pre>
+<pre class="r"><code>freq_table$. &lt;- freq_table$. %&gt;% scales::percent()
 freq_table</code></pre>
 <pre><code>##                                .
-## Agree                      22.0%
-## Disagree                   17.9%
+## Agree                      21.9%
+## Disagree                   18.0%
 ## Neither agree nor disagree 37.2%
 ## Strongly agree              6.6%
-## Strongly disagree          16.2%</code></pre>
+## Strongly disagree          16.3%</code></pre>
 <p>Now, let’s complicate things a bit. I suppose we would like to see how these percentages differ for various subpopulations, in our example: men vs women. First let’s save a list of answers to variable, for later use.</p>
-<pre class="r"><code>answers &lt;- names(wpct(data$Question, weight = data$Weight))</code></pre>
+<pre class="r"><code>answers &lt;- names(wpct(data$Question, weight = data$WeightPerCountry))</code></pre>
+<pre><code>## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.</code></pre>
 <p>We need to apply wpct to each answer and each group separately. Fortunately, with a little trick we can pass wpct into margritr pipes, so we don’t need to resolve to loops. The trick is to use “do” function.</p>
 <pre class="r"><code>freq_table &lt;- data %&gt;% 
   group_by(Gender) %&gt;%
-  do(as.data.frame(wpct(.$Question, .$Weight, na.rm = TRUE))) %&gt;%
+  do(as.data.frame(wpct(.$Question, .$WeightPerCountry, na.rm = TRUE))) %&gt;%
   mutate(answers = answers)</code></pre>
-<p>Now let’s do few finishing touches: (1) change ugly default name of second column, (2) convert fractions to percents and (3) spread the table to make comparisons easier.</p>
+<pre><code>## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.
+
+## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.</code></pre>
+<p>Now let’s do few finishing touches: (1) change ugly default name of second column, (2) round fractions to double-digits and (3) spread the table to make comparisons easier.</p>
 <pre class="r"><code>names(freq_table)[2] &lt;- &quot;frequency&quot;
-freq_table$frequency &lt;- freq_table$frequency %&gt;% percent()
+freq_table$frequency &lt;- freq_table$frequency %&gt;% 
+  round(2)
 
 freq_table &lt;- freq_table %&gt;% 
   spread(key = answers, &quot;frequency&quot;)</code></pre>
@@ -329,19 +337,19 @@ And voila…
 <th style="text-align:left;">
 Gender
 </th>
-<th style="text-align:left;">
+<th style="text-align:right;">
 Agree
 </th>
-<th style="text-align:left;">
+<th style="text-align:right;">
 Disagree
 </th>
-<th style="text-align:left;">
+<th style="text-align:right;">
 Neither agree nor disagree
 </th>
-<th style="text-align:left;">
+<th style="text-align:right;">
 Strongly agree
 </th>
-<th style="text-align:left;">
+<th style="text-align:right;">
 Strongly disagree
 </th>
 </tr>
@@ -351,40 +359,40 @@ Strongly disagree
 <td style="text-align:left;">
 Man
 </td>
-<td style="text-align:left;">
-22.1%
+<td style="text-align:right;">
+0.22
 </td>
-<td style="text-align:left;">
-17.7%
+<td style="text-align:right;">
+0.18
 </td>
-<td style="text-align:left;">
-35.6%
+<td style="text-align:right;">
+0.36
 </td>
-<td style="text-align:left;">
-6.5%
+<td style="text-align:right;">
+0.06
 </td>
-<td style="text-align:left;">
-18.1%
+<td style="text-align:right;">
+0.18
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
 Woman
 </td>
-<td style="text-align:left;">
-22.0%
+<td style="text-align:right;">
+0.22
 </td>
-<td style="text-align:left;">
-18.1%
+<td style="text-align:right;">
+0.18
 </td>
-<td style="text-align:left;">
-38.9%
+<td style="text-align:right;">
+0.39
 </td>
-<td style="text-align:left;">
-6.7%
+<td style="text-align:right;">
+0.07
 </td>
-<td style="text-align:left;">
-14.2%
+<td style="text-align:right;">
+0.14
 </td>
 </tr>
 </tbody>

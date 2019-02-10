@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>How to create plot from Likert-scale data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Miscellanea blog</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="plots.html">Likert plots</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">How to create plot from Likert-scale data</h1>
+
+</div>
+
+
+<p>The answers in the example above are arranged on a 5-point Likert scale. This means that respondents indicate a degree to which they agree with a particular statement from 1 - “strongly disagree” to 5 - “strongly agree”. However, a Likert scale could contain from 3 to 7 points of reference.</p>
+<p>A nice visualization of Likert-scale answers is a stacked bar chart anchored in the middle of most “indifferent” part of survey sample. The position of each bar represents the balance of opinion. The more the bar is shifted to a particular direction, the more agreeable or disagreeable the population is. Thus multiple bars can be easily compared to each other. Obtaining such plot requires, however, some effort. I have tried two ways of doing it:</p>
+<ol style="list-style-type: decimal">
+<li><p>The first one is more tedious, but allows for more flexibility. It uses <em>ggplot2</em> package and “geom_bar” aestethics. You can find it’s description here: <a href="http://rnotr.com/likert/ggplot/barometer/likert-plots/" class="uri">http://rnotr.com/likert/ggplot/barometer/likert-plots/</a></p></li>
+<li><p>The second one comes from the same author (<a href="http://rnotr.com/likert/ggplot/barometer/likert-plotly/" class="uri">http://rnotr.com/likert/ggplot/barometer/likert-plotly/</a>) and also uses <em>ggplot2</em> but with “geom_segment” aestethics. It is simpler and more concise, but also blocks “color” argument for other use on the chart. This might be a problem if you want to have data-labels on the chart and color them black on light background and white on dark background.</p></li>
+</ol>
+<div id="preparing-data-for-a-very-basic-likert-scale-plot." class="section level2">
+<h2>1. Preparing data for a very basic Likert-scale plot.</h2>
+<p>Let’s start with preparing some survey data, accoring to a recipe described in “Home” tab.</p>
+<pre class="r"><code>data_2 &lt;- read.csv(&quot;survey_data.csv&quot;)
+answers &lt;- names(wpct(data_2$Question, weight = data_2$WeightPerCountry))
+freq_table_2 &lt;- data_2 %&gt;% 
+  group_by(Country) %&gt;%
+  do(as.data.frame(wpct(.$Question, .$WeightPerCountry, na.rm = TRUE))) %&gt;%
+  mutate(answers = answers) %&gt;% 
+  spread(key = answers, `wpct(.$Question, .$WeightPerCountry, na.rm = TRUE)`)</code></pre>
+We’ve got a dataframe where each row denotes a country (15 totaland each collumn a percentages of people sharing a Likert-scale opinion to “Statement”
+<table class="table table-striped" style="width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Agree
+</th>
+<th style="text-align:right;">
+Disagree
+</th>
+<th style="text-align:right;">
+Neither agree nor disagree
+</th>
+<th style="text-align:right;">
+Strongly agree
+</th>
+<th style="text-align:right;">
+Strongly disagree
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Australia
+</td>
+<td style="text-align:right;">
+0.4432163
+</td>
+<td style="text-align:right;">
+0.1307912
+</td>
+<td style="text-align:right;">
+0.2460460
+</td>
+<td style="text-align:right;">
+0.1347252
+</td>
+<td style="text-align:right;">
+0.0452213
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Austria
+</td>
+<td style="text-align:right;">
+0.3768841
+</td>
+<td style="text-align:right;">
+0.1106368
+</td>
+<td style="text-align:right;">
+0.1910697
+</td>
+<td style="text-align:right;">
+0.2547108
+</td>
+<td style="text-align:right;">
+0.0666986
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Belgium
+</td>
+<td style="text-align:right;">
+0.3926761
+</td>
+<td style="text-align:right;">
+0.1253283
+</td>
+<td style="text-align:right;">
+0.2796286
+</td>
+<td style="text-align:right;">
+0.1437738
+</td>
+<td style="text-align:right;">
+0.0585932
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Czech Republic
+</td>
+<td style="text-align:right;">
+0.3928110
+</td>
+<td style="text-align:right;">
+0.2617478
+</td>
+<td style="text-align:right;">
+0.1604267
+</td>
+<td style="text-align:right;">
+0.0889059
+</td>
+<td style="text-align:right;">
+0.0961085
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+France
+</td>
+<td style="text-align:right;">
+0.3553662
+</td>
+<td style="text-align:right;">
+0.1758601
+</td>
+<td style="text-align:right;">
+0.2659228
+</td>
+<td style="text-align:right;">
+0.1140069
+</td>
+<td style="text-align:right;">
+0.0888440
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Germany
+</td>
+<td style="text-align:right;">
+0.3754572
+</td>
+<td style="text-align:right;">
+0.1063672
+</td>
+<td style="text-align:right;">
+0.2299037
+</td>
+<td style="text-align:right;">
+0.2357029
+</td>
+<td style="text-align:right;">
+0.0525690
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Italy
+</td>
+<td style="text-align:right;">
+0.3302827
+</td>
+<td style="text-align:right;">
+0.1945030
+</td>
+<td style="text-align:right;">
+0.2865024
+</td>
+<td style="text-align:right;">
+0.0716476
+</td>
+<td style="text-align:right;">
+0.1170643
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Luxembourg
+</td>
+<td style="text-align:right;">
+0.4462505
+</td>
+<td style="text-align:right;">
+0.1109210
+</td>
+<td style="text-align:right;">
+0.1805304
+</td>
+<td style="text-align:right;">
+0.2210029
+</td>
+<td style="text-align:right;">
+0.0412951
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Netherlands
+</td>
+<td style="text-align:right;">
+0.4627829
+</td>
+<td style="text-align:right;">
+0.0740576
+</td>
+<td style="text-align:right;">
+0.2447339
+</td>
+<td style="text-align:right;">
+0.1917606
+</td>
+<td style="text-align:right;">
+0.0266651
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Poland
+</td>
+<td style="text-align:right;">
+0.4597878
+</td>
+<td style="text-align:right;">
+0.1716294
+</td>
+<td style="text-align:right;">
+0.1628752
+</td>
+<td style="text-align:right;">
+0.1411146
+</td>
+<td style="text-align:right;">
+0.0645931
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Romania
+</td>
+<td style="text-align:right;">
+0.2740642
+</td>
+<td style="text-align:right;">
+0.2059223
+</td>
+<td style="text-align:right;">
+0.3406206
+</td>
+<td style="text-align:right;">
+0.0842062
+</td>
+<td style="text-align:right;">
+0.0951867
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Spain
+</td>
+<td style="text-align:right;">
+0.3658688
+</td>
+<td style="text-align:right;">
+0.1546854
+</td>
+<td style="text-align:right;">
+0.3031380
+</td>
+<td style="text-align:right;">
+0.1020175
+</td>
+<td style="text-align:right;">
+0.0742903
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Turkey
+</td>
+<td style="text-align:right;">
+0.4195380
+</td>
+<td style="text-align:right;">
+0.1072040
+</td>
+<td style="text-align:right;">
+0.2007320
+</td>
+<td style="text-align:right;">
+0.1698085
+</td>
+<td style="text-align:right;">
+0.1027175
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+United Kingdom
+</td>
+<td style="text-align:right;">
+0.3861399
+</td>
+<td style="text-align:right;">
+0.1214475
+</td>
+<td style="text-align:right;">
+0.2188544
+</td>
+<td style="text-align:right;">
+0.2199908
+</td>
+<td style="text-align:right;">
+0.0535674
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA
+</td>
+<td style="text-align:right;">
+0.3961786
+</td>
+<td style="text-align:right;">
+0.1321057
+</td>
+<td style="text-align:right;">
+0.1967189
+</td>
+<td style="text-align:right;">
+0.2155289
+</td>
+<td style="text-align:right;">
+0.0594679
+</td>
+</tr>
+</tbody>
+</table>
+<p>Our first step in obtaining Likert-style plot is to divide the middle group (in our case: “Neither agree nor disagree” group) into two equal subgroups. To do that mutate freq_table in the following way and then order the columns from least agreeable to most agreeable (getting rid of now obsolete <code>Neither agree nor disagree</code> column in the process).</p>
+<pre class="r"><code>freq_table_2 &lt;- freq_table_2 %&gt;% 
+  mutate(Midlow = `Neither agree nor disagree`/2,
+         Midhigh = `Neither agree nor disagree`/2)
+
+freq_table_2 &lt;- freq_table_2[c(1, 6, 3, 7, 8, 2, 5)]</code></pre>
+<p>Third step is to transform your data into a long format. One popular way of doing it is to use <em>melt</em> function from <em>reshape2</em> package. However, if you like to stay within <em>tidyverse</em> framework you may use a <em>gather</em> function from <em>dplyr</em> package. Let’s use it then…</p>
+<pre class="r"><code>freq_table_long_2 &lt;- freq_table_2 %&gt;% 
+  gather(key = &quot;key&quot;, value = &quot;value&quot;, 2:7, - Country) %&gt;% 
+  mutate(color = palette)
+
+freq_table_long_2$key &lt;- factor(freq_table_long_2$key, 
+                                levels = c(&quot;Strongly disagree&quot;,
+                                           &quot;Disagree&quot;,
+                                           &quot;Midlow&quot;, 
+                                           &quot;Midhigh&quot;,
+                                           &quot;Agree&quot;, 
+                                           &quot;Strongly agree&quot;)) 
+freq_table_long_2$Country &lt;- factor(freq_table_long_2$Country,
+                                    levels = freq_table_2$Country[order(-(freq_table_2[, 5] + freq_table_2[, 6] + freq_table_2[, 7]))])</code></pre>
+to obtain:
+<table class="table table-striped" style="width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:left;">
+key
+</th>
+<th style="text-align:right;">
+value
+</th>
+<th style="text-align:left;">
+color
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Australia
+</td>
+<td style="text-align:left;">
+Strongly disagree
+</td>
+<td style="text-align:right;">
+0.0452213
+</td>
+<td style="text-align:left;">
+dark blue
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Austria
+</td>
+<td style="text-align:left;">
+Strongly disagree
+</td>
+<td style="text-align:right;">
+0.0666986
+</td>
+<td style="text-align:left;">
+dark blue
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Belgium
+</td>
+<td style="text-align:left;">
+Strongly disagree
+</td>
+<td style="text-align:right;">
+0.0585932
+</td>
+<td style="text-align:left;">
+dark blue
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Czech Republic
+</td>
+<td style="text-align:left;">
+Strongly disagree
+</td>
+<td style="text-align:right;">
+0.0961085
+</td>
+<td style="text-align:left;">
+dark blue
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+France
+</td>
+<td style="text-align:left;">
+Strongly disagree
+</td>
+<td style="text-align:right;">
+0.0888440
+</td>
+<td style="text-align:left;">
+dark blue
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Germany
+</td>
+<td style="text-align:left;">
+Strongly disagree
+</td>
+<td style="text-align:right;">
+0.0525690
+</td>
+<td style="text-align:left;">
+dark blue
+</td>
+</tr>
+</tbody>
+</table>
+<p>Next step is to split the freq_table_long into two separate datasets, one for positive bars (“highs”) and the other for negative bars (“lows”). Those datasets should be ordered separately in this specific way. Otherwise the bars on the chart will be stacked in the wrong order.</p>
+<pre class="r"><code>lows &lt;- freq_table_long_2[1:(nrow(freq_table_long_2)/2),]
+lows$key &lt;- factor(lows$key, levels = c(&quot;Strongly disagree&quot;, &quot;Disagree&quot;, &quot;Midlow&quot;))
+
+highs &lt;- freq_table_long_2[(nrow(freq_table_long_2)/2+1):nrow(freq_table_long_2),]
+highs$key &lt;- factor(highs$key, levels = c(&quot;Strongly agree&quot;,&quot;Agree&quot;, &quot;Midhigh&quot;))</code></pre>
+<p>This is enough to create a very basic Likert-scale plot. It shows quite well, which country is most leaning to agree with the statment that “Statement” and which tends to disagree most often. However, the colors on the chart and the legend are very confusing and need to be improved.</p>
+<p><img src="plots_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="adding-colors-to-the-likert-style-plot." class="section level2">
+<h2>2. Adding colors to the Likert-style plot.</h2>
+<p>In order to align colors on the chart and on the legend you need to specify two palettes. One for legend - with separate color for each Likert-scale answer. And the other one with doubled color for the middle answer on the Likert scale (for “Midlow” and “Midhigh” separately). Moreover, we need to specify what will appear on the legend. I usually work with palette with violets for negative answers and oranges for positive ones with grey reserved for ambiguity:</p>
+<pre class="r"><code>palette_legend &lt;- c(&quot;#525199&quot;, &quot;#9393C6&quot;, &quot;#A8A8A8&quot;, &quot;#FFA166&quot;, &quot;#FF6200&quot;)
+palette_plot &lt;- c(&quot;#525199&quot;, &quot;#9393C6&quot;, &quot;#A8A8A8&quot;, &quot;#A8A8A8&quot;, &quot;#FFA166&quot;, &quot;#FF6200&quot;)
+
+legend &lt;- c(&quot;Strongly disagree&quot;, &quot;Disagree&quot;, &quot;Neither disagree,\nnor agree&quot;, &quot;Agree&quot;, &quot;Strongly agree&quot;)</code></pre>
+<p>In order to include these colors in the plot we need to go back to the freq_table_long_2 and assign an appropriate color to each key by adding a new column. Next you need to split the table into highs and lows again and arrange them as factors in correct order.</p>
+<pre class="r"><code>freq_table_long_2$color &lt;- rep(palette_plot, each = length(unique(freq_table_long_2$Country)))
+
+lows &lt;- freq_table_long_2[1:(nrow(freq_table_long_2)/2),]
+lows$key &lt;- factor(lows$key, levels = c(&quot;Strongly disagree&quot;, &quot;Disagree&quot;, &quot;Midlow&quot;))
+
+highs &lt;- freq_table_long_2[(nrow(freq_table_long_2)/2+1):nrow(freq_table_long_2),]
+highs$key &lt;- factor(highs$key, levels = c(&quot;Strongly agree&quot;,&quot;Agree&quot;, &quot;Midhigh&quot;))
+highs$color &lt;- factor(highs$color, levels = c(&quot;#FF6200&quot;,&quot;#FFA166&quot;,&quot;#A8A8A8&quot;))</code></pre>
+<p>Now we can draw the plot again, but this time the fill parameter in the geom_bar will be assigned the color variable instead of key variable. <img src="plots_files/figure-html/unnamed-chunk-10-1.png" width="672" /> It looks much better.</p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

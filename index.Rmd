@@ -2,7 +2,7 @@
 title: "Analyzing survey data with R"
 ---
 
-## How to tabulate in R frequencies of a survey answers (weighted)
+## 1. How to tabulate in R frequencies of a survey answers (weighted)
 
 When exploring survey data I often like to have a look at the frequencies of answers to particular questions, broken down by respondent's country, sex, age or any other variable at hand. However, this task isn't that simple, as survey data are often coded in very inconvenient way, for instance: 
 
@@ -27,28 +27,29 @@ However, the characteristic feature of surveys is that each observation is assig
 Fortunately, there is an easier solution, namely "weights" package, which contains a function *wpct*, which was designed to do exactly that. Its syntax is quite straightforward. You just need to pass relevant column of data and specify column with weights. For more legibility you may want to define the output as dataframe and convert fractions to percentages:
 ```{r, eval = TRUE, include = TRUE, echo = TRUE}
 freq_table <- data$Question %>% 
-              wpct(data$Weight) %>%
+              wpct(data$WeightPerCountry) %>%
               as.data.frame()
 
-freq_table$. <- freq_table$. %>% percent()
+freq_table$. <- freq_table$. %>% scales::percent()
 freq_table
 ```
 Now, let's complicate things a bit. I suppose we would like to see how these percentages differ for various subpopulations, in our example: men vs women. First let's save a list of answers to variable, for later use.  
 ```{r, eval = TRUE, include = TRUE, echo = TRUE}
-answers <- names(wpct(data$Question, weight = data$Weight))
+answers <- names(wpct(data$Question, weight = data$WeightPerCountry))
 ```
 
 We need to apply wpct to each answer and each group separately. Fortunately, with a little trick we can pass wpct into margritr pipes, so we don't need to resolve to loops. The trick is to use "do" function.   
 ```{r, eval = TRUE, include = TRUE, echo = TRUE}
 freq_table <- data %>% 
   group_by(Gender) %>%
-  do(as.data.frame(wpct(.$Question, .$Weight, na.rm = TRUE))) %>%
+  do(as.data.frame(wpct(.$Question, .$WeightPerCountry, na.rm = TRUE))) %>%
   mutate(answers = answers)
 ```
-Now let's do few finishing touches: (1) change ugly default name of second column, (2) convert fractions to percents and (3) spread the table to make comparisons easier. 
+Now let's do few finishing touches: (1) change ugly default name of second column, (2) round fractions to double-digits and (3) spread the table to make comparisons easier. 
 ```{r, eval = TRUE, include = TRUE, echo = TRUE}
 names(freq_table)[2] <- "frequency"
-freq_table$frequency <- freq_table$frequency %>% percent()
+freq_table$frequency <- freq_table$frequency %>% 
+  round(2)
 
 freq_table <- freq_table %>% 
   spread(key = answers, "frequency")

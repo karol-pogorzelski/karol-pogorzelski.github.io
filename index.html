@@ -215,10 +215,18 @@ $(document).ready(function () {
 <thead>
 <tr>
 <th style="text-align:left;">
-Gender
+</th>
+<th style="text-align:left;">
+Country
 </th>
 <th style="text-align:right;">
-Weight
+WeightPerCountry
+</th>
+<th style="text-align:right;">
+WeightEurope
+</th>
+<th style="text-align:left;">
+Gender
 </th>
 <th style="text-align:left;">
 Question
@@ -228,10 +236,19 @@ Question
 <tbody>
 <tr>
 <td style="text-align:left;">
-Man
+100
+</td>
+<td style="text-align:left;">
+Germany
 </td>
 <td style="text-align:right;">
-1.01
+1.02
+</td>
+<td style="text-align:right;">
+2.27
+</td>
+<td style="text-align:left;">
+Woman
 </td>
 <td style="text-align:left;">
 Agree
@@ -239,54 +256,99 @@ Agree
 </tr>
 <tr>
 <td style="text-align:left;">
-Man
+101
+</td>
+<td style="text-align:left;">
+Poland
 </td>
 <td style="text-align:right;">
-0.87
-</td>
-<td style="text-align:left;">
-Strongly disagree
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Man
-</td>
-<td style="text-align:right;">
-0.99
-</td>
-<td style="text-align:left;">
-Neither agree nor disagree
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Woman
-</td>
-<td style="text-align:right;">
-0.98
-</td>
-<td style="text-align:left;">
-Strongly disagree
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Woman
+0.96
 </td>
 <td style="text-align:right;">
 0.97
 </td>
 <td style="text-align:left;">
-Neither agree nor disagree
+Woman
+</td>
+<td style="text-align:left;">
+Strongly agree
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Woman
+102
+</td>
+<td style="text-align:left;">
+Australia
 </td>
 <td style="text-align:right;">
-0.98
+0.96
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+Woman
+</td>
+<td style="text-align:left;">
+Strongly agree
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+103
+</td>
+<td style="text-align:left;">
+Belgium
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:left;">
+Woman
+</td>
+<td style="text-align:left;">
+Strongly agree
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+104
+</td>
+<td style="text-align:left;">
+United Kingdom
+</td>
+<td style="text-align:right;">
+0.95
+</td>
+<td style="text-align:right;">
+1.49
+</td>
+<td style="text-align:left;">
+Woman
+</td>
+<td style="text-align:left;">
+Agree
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+105
+</td>
+<td style="text-align:left;">
+Netherlands
+</td>
+<td style="text-align:right;">
+0.94
+</td>
+<td style="text-align:right;">
+0.40
+</td>
+<td style="text-align:left;">
+Man
 </td>
 <td style="text-align:left;">
 Disagree
@@ -302,27 +364,23 @@ Disagree
 <p>Fortunately, there is an easier solution, namely “weights” package, which contains a function <em>wpct</em>, which was designed to do exactly that. Its syntax is quite straightforward. You just need to pass relevant column of data and specify column with weights. For more legibility you may want to define the output as dataframe and convert fractions to percentages:</p>
 <pre class="r"><code>freq_table &lt;- data$Question %&gt;% 
               wpct(data$WeightPerCountry) %&gt;%
-              as.data.frame()</code></pre>
-<pre><code>## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.</code></pre>
-<pre class="r"><code>freq_table$. &lt;- freq_table$. %&gt;% scales::percent()
+              as.data.frame()
+
+freq_table$. &lt;- freq_table$. %&gt;% scales::percent()
 freq_table</code></pre>
 <pre><code>##                                .
-## Agree                      21.9%
-## Disagree                   18.0%
-## Neither agree nor disagree 37.2%
-## Strongly agree              6.6%
-## Strongly disagree          16.3%</code></pre>
+## Agree                      39.0%
+## Disagree                   14.7%
+## Neither agree nor disagree 23.5%
+## Strongly agree             15.8%
+## Strongly disagree           7.0%</code></pre>
 <p>Now, let’s complicate things a bit. I suppose we would like to see how these percentages differ for various subpopulations, in our example: men vs women. First let’s save a list of answers to variable, for later use.</p>
 <pre class="r"><code>answers &lt;- names(wpct(data$Question, weight = data$WeightPerCountry))</code></pre>
-<pre><code>## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.</code></pre>
 <p>We need to apply wpct to each answer and each group separately. Fortunately, with a little trick we can pass wpct into margritr pipes, so we don’t need to resolve to loops. The trick is to use “do” function.</p>
 <pre class="r"><code>freq_table &lt;- data %&gt;% 
   group_by(Gender) %&gt;%
   do(as.data.frame(wpct(.$Question, .$WeightPerCountry, na.rm = TRUE))) %&gt;%
   mutate(answers = answers)</code></pre>
-<pre><code>## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.
-
-## Warning: Unknown or uninitialised column: &#39;WeightPerCountry&#39;.</code></pre>
 <p>Now let’s do few finishing touches: (1) change ugly default name of second column, (2) round fractions to double-digits and (3) spread the table to make comparisons easier.</p>
 <pre class="r"><code>names(freq_table)[2] &lt;- &quot;frequency&quot;
 freq_table$frequency &lt;- freq_table$frequency %&gt;% 
@@ -360,19 +418,19 @@ Strongly disagree
 Man
 </td>
 <td style="text-align:right;">
-0.22
+0.40
+</td>
+<td style="text-align:right;">
+0.13
+</td>
+<td style="text-align:right;">
+0.24
 </td>
 <td style="text-align:right;">
 0.18
-</td>
-<td style="text-align:right;">
-0.36
 </td>
 <td style="text-align:right;">
 0.06
-</td>
-<td style="text-align:right;">
-0.18
 </td>
 </tr>
 <tr>
@@ -380,19 +438,19 @@ Man
 Woman
 </td>
 <td style="text-align:right;">
-0.22
+0.38
 </td>
 <td style="text-align:right;">
-0.18
+0.17
 </td>
 <td style="text-align:right;">
-0.39
-</td>
-<td style="text-align:right;">
-0.07
+0.23
 </td>
 <td style="text-align:right;">
 0.14
+</td>
+<td style="text-align:right;">
+0.08
 </td>
 </tr>
 </tbody>

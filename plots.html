@@ -214,8 +214,8 @@ $(document).ready(function () {
 <li><p>The first one is more tedious, but allows for more flexibility. It uses <em>ggplot2</em> package and “geom_bar” aestethics. You can find it’s description here: <a href="http://rnotr.com/likert/ggplot/barometer/likert-plots/" class="uri">http://rnotr.com/likert/ggplot/barometer/likert-plots/</a></p></li>
 <li><p>The second one comes from the same author (<a href="http://rnotr.com/likert/ggplot/barometer/likert-plotly/" class="uri">http://rnotr.com/likert/ggplot/barometer/likert-plotly/</a>) and also uses <em>ggplot2</em> but with “geom_segment” aestethics. It is simpler and more concise, but also blocks “color” argument for other use on the chart. This might be a problem if you want to have data-labels on the chart and color them black on light background and white on dark background.</p></li>
 </ol>
-<div id="preparing-data." class="section level2">
-<h2>1. Preparing data.</h2>
+<div id="step-1.-preparing-data." class="section level2">
+<h2>Step 1. Preparing data.</h2>
 <p>Let’s start with preparing some survey data, accoring to a recipe described in “Home” tab.</p>
 <pre class="r"><code>data_2 &lt;- read.csv(&quot;survey_data.csv&quot;)
 answers &lt;- names(wpct(data_2$Question, weight = data_2$WeightPerCountry))
@@ -371,15 +371,25 @@ Germany
 </tr>
 </tbody>
 </table>
-<p>Our first step in obtaining Likert-style plot is to divide the middle group (in our case: “Neither agree nor disagree” group) into two equal subgroups. To do that mutate freq_table in the following way and then order the columns from least agreeable to most agreeable (getting rid of now obsolete <code>Neither agree nor disagree</code> column in the process).</p>
+<p>Our first step in obtaining Likert-style plot is to divide the middle group (in our case: “Neither agree nor disagree” group) into two equal subgroups. To do that mutate freq_table in the following way and then order the columns from least agreeable to most agreeable (getting rid of now obsolete <code>Neither agree nor disagree</code> column in the process). I will also add variables for negative data-labels positions (label_position for “Disagree” and label_position_2 for “Strongly disagree”). I will go back to them later.</p>
 <pre class="r"><code>freq_table_2 &lt;- freq_table_2 %&gt;% 
   mutate(Midlow = `Neither agree nor disagree`/2,
-         Midhigh = `Neither agree nor disagree`/2)
+         Midhigh = `Neither agree nor disagree`/2,
+         label_position = - Midlow - Disagree/2,
+         label_position_2 = - Midlow - Disagree - `Strongly disagree`/2)
 
-freq_table_2 &lt;- freq_table_2[c(1, 6, 3, 7, 8, 2, 5)]</code></pre>
-<p>Third step is to transform your data into a long format. One popular way of doing it is to use <em>melt</em> function from <em>reshape2</em> package. However, if you like to stay within <em>tidyverse</em> framework you may use a <em>gather</em> function from <em>dplyr</em> package. Let’s use it then…</p>
+freq_table_2 &lt;- freq_table_2[c(1, 6, 3, 7, 8, 2, 5, 9, 10)]
+
+# Transforming data-frame into a long format
+freq_table_long_2 &lt;- freq_table_2 %&gt;% 
+  gather(key = &quot;key&quot;, value = &quot;value&quot;, 2:7, - Country, - label_position, - label_position_2)</code></pre>
+<p>Third step is to transform your data into a long format. One popular way of doing it is to use <em>melt</em> function from <em>reshape2</em> package. However, if you like to stay within <em>tidyverse</em> framework you may use a <em>gather</em> function from <em>dplyr</em> package. I will also take this opportunity, to integrate two label_position variables into one (by <em>ifelse</em> statement) and add a label_color variable. I will use it to put white data-labels on dark background and black data-labels on bright background. I’ll explain that later</p>
+<p>However, long data format itself is not enough. You need to arrange it in the right way. Let’s start with the answers (denoted here as “key”). You need to define them as factor with levels spanning from least to most favourable (from “Strongly disagree” to “Strongly agree”) remembering that you got “Midhigh” and “Midlow” instead of one middle answer.</p>
+<p>Next, the countries or other variable you’d like to show on the plot. These are factors as well and you need to arrange them according to the length of the bar on the left or right of the neutral line on the plot.</p>
 <pre class="r"><code>freq_table_long_2 &lt;- freq_table_2 %&gt;% 
-  gather(key = &quot;key&quot;, value = &quot;value&quot;, 2:7, - Country)
+  gather(key = &quot;key&quot;, value = &quot;value&quot;, 2:7, - Country) %&gt;% 
+  mutate(label_position = ifelse(key == &quot;Strongly disagree&quot;, label_position_2, label_position), 
+         label_color = ifelse(key == &quot;Strongly agree&quot; | key == &quot;Strongly disagree&quot;, &quot;a&quot;, &quot;b&quot;)) # a variable to differentiate label-color depending on the background.
 
 freq_table_long_2$key &lt;- factor(freq_table_long_2$key, 
                                 levels = c(&quot;Strongly disagree&quot;,
@@ -397,11 +407,20 @@ to obtain:
 <th style="text-align:left;">
 Country
 </th>
+<th style="text-align:right;">
+label_position
+</th>
+<th style="text-align:right;">
+label_position_2
+</th>
 <th style="text-align:left;">
 key
 </th>
 <th style="text-align:right;">
 value
+</th>
+<th style="text-align:left;">
+label_color
 </th>
 </tr>
 </thead>
@@ -410,16 +429,31 @@ value
 <td style="text-align:left;">
 Australia
 </td>
+<td style="text-align:right;">
+-0.2764248
+</td>
+<td style="text-align:right;">
+-0.2764248
+</td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
 0.0452213
 </td>
+<td style="text-align:left;">
+a
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
 Austria
+</td>
+<td style="text-align:right;">
+-0.2395210
+</td>
+<td style="text-align:right;">
+-0.2395210
 </td>
 <td style="text-align:left;">
 Strongly disagree
@@ -427,10 +461,19 @@ Strongly disagree
 <td style="text-align:right;">
 0.0666986
 </td>
+<td style="text-align:left;">
+a
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
 Belgium
+</td>
+<td style="text-align:right;">
+-0.2944392
+</td>
+<td style="text-align:right;">
+-0.2944392
 </td>
 <td style="text-align:left;">
 Strongly disagree
@@ -438,10 +481,19 @@ Strongly disagree
 <td style="text-align:right;">
 0.0585932
 </td>
+<td style="text-align:left;">
+a
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
 Czech Republic
+</td>
+<td style="text-align:right;">
+-0.3900154
+</td>
+<td style="text-align:right;">
+-0.3900154
 </td>
 <td style="text-align:left;">
 Strongly disagree
@@ -449,10 +501,19 @@ Strongly disagree
 <td style="text-align:right;">
 0.0961085
 </td>
+<td style="text-align:left;">
+a
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
 France
+</td>
+<td style="text-align:right;">
+-0.3532435
+</td>
+<td style="text-align:right;">
+-0.3532435
 </td>
 <td style="text-align:left;">
 Strongly disagree
@@ -460,16 +521,28 @@ Strongly disagree
 <td style="text-align:right;">
 0.0888440
 </td>
+<td style="text-align:left;">
+a
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
 Germany
+</td>
+<td style="text-align:right;">
+-0.2476035
+</td>
+<td style="text-align:right;">
+-0.2476035
 </td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
 0.0525690
+</td>
+<td style="text-align:left;">
+a
 </td>
 </tr>
 </tbody>
@@ -496,13 +569,15 @@ highs$key &lt;- factor(highs$key, levels = c(&quot;Strongly agree&quot;,&quot;Ag
   coord_flip()</code></pre>
 <p><img src="plots_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
-<div id="adding-colors." class="section level2">
-<h2>2. Adding colors.</h2>
-<p>In order to align colors on the chart and on the legend you need to specify two palettes. One for legend - with separate color for each Likert-scale answer. And the other one with doubled color for the middle answer on the Likert scale (for “Midlow” and “Midhigh” separately). Moreover, we need to specify what will appear on the legend. I usually work with palette with violets for negative answers and oranges for positive ones with grey reserved for ambiguity:</p>
+<div id="step-2.-adding-colors." class="section level2">
+<h2>Step 2. Adding colors.</h2>
+<p>I like to design colors on the Likert plot in a way that makes the chart more intuitive and easier to read. The following rules seem to help in my opinion: * Assign warm colors for positive answers and cold colors for negative. * Assign saturated colors to strong answers (e.g. “Strongly agree”) and less saturated for more balanced opinions. * Assign grey color for ambiguity.</p>
+<p>For Likert-plot you need to specify two palettes. One for legend - with separate color for each Likert-scale answer. And the other one with doubled color for the middle answer on the Likert scale (for “Midlow” and “Midhigh” separately). Moreover, we need to specify what will appear on the legend. I also specify a third palette for colors of data-labels (just two of them: white and dark grey).</p>
 <pre class="r"><code>palette_legend &lt;- c(&quot;#525199&quot;, &quot;#9393C6&quot;, &quot;#A8A8A8&quot;, &quot;#FFA166&quot;, &quot;#FF6200&quot;)
 palette_plot &lt;- c(&quot;#525199&quot;, &quot;#9393C6&quot;, &quot;#A8A8A8&quot;, &quot;#A8A8A8&quot;, &quot;#FFA166&quot;, &quot;#FF6200&quot;)
+palette_labels &lt;- c(&quot;white&quot;, grey(.2))
 
-legend &lt;- c(&quot;Strongly disagree&quot;, &quot;Disagree&quot;, &quot;Neither disagree,\nnor agree&quot;, &quot;Agree&quot;, &quot;Strongly agree&quot;)</code></pre>
+legend &lt;- c(&quot;Strongly\ndisagree&quot;, &quot;Disagree&quot;, &quot;Neither disagree,\nnor agree&quot;, &quot;Agree&quot;, &quot;Strongly\nagree&quot;)</code></pre>
 <p>In order to include these colors in the plot we need to go back to the freq_table_long_2 and assign an appropriate color to each key by adding a new column. Next you need to split the table into highs and lows again and arrange them as factors in correct order.</p>
 <pre class="r"><code>freq_table_long_2$color &lt;- rep(palette_plot, each = length(unique(freq_table_long_2$Country)))
 
@@ -512,7 +587,7 @@ lows$key &lt;- factor(lows$key, levels = c(&quot;Strongly disagree&quot;, &quot;
 highs &lt;- freq_table_long_2[(nrow(freq_table_long_2)/2+1):nrow(freq_table_long_2),]
 highs$key &lt;- factor(highs$key, levels = c(&quot;Strongly agree&quot;,&quot;Agree&quot;, &quot;Midhigh&quot;))
 highs$color &lt;- factor(highs$color, levels = c(&quot;#FF6200&quot;,&quot;#FFA166&quot;,&quot;#A8A8A8&quot;))</code></pre>
-<p>Now we can draw the plot again, but this time the fill parameter in the geom_bar will be assigned the color variable instead of key variable. And it looks much better.</p>
+<p>Now we can draw the plot again, but this time the fill parameter in the geom_bar will be assigned the color variable instead of key variable.</p>
 <pre class="r"><code>chart &lt;- ggplot() +
   geom_bar(data = highs,
            aes(x = Country, 
@@ -532,62 +607,51 @@ highs$color &lt;- factor(highs$color, levels = c(&quot;#FF6200&quot;,&quot;#FFA1
 chart</code></pre>
 <p><img src="plots_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>The chart looks nice, but a is a bit hard to read. You can easily assess the balance of opinion in a paricular country compared to other counries. But that’s generally it. If you’d like to know what percentage of population in Netherlands agrees or strongy agrees with the “Statment” the chart won’t be of much help. The x axis is essentially useless. The solution is to add data-labels.</p>
+</div>
+<div id="step-3.-adding-data-labels." class="section level2">
+<h2>Step 3. Adding data-labels.</h2>
 <p>Unfortunately, adding data-labels to a Likert-style chart is quite complicated. You need to do it separately for highs, lows and for the middle answer dataframes. It is easy for highs and for middle answers. The geom_text statement will do it for you in the following way:</p>
 <pre class="r"><code>chart &lt;- chart +
+  # Data-labels for positive answers
     geom_text(data = highs, 
               aes(label = ifelse(key == &quot;Midhigh&quot; | value &lt;= 0.05, &quot;&quot;, percent(value, accuracy = 1)),
                   x = Country, 
-                  y = value), 
-            size = 3, color = grey(.2), position = position_stack(vjust = 0.5)) +
+                  y = value,
+                  color = factor(label_color)), 
+            size = 3, position = position_stack(vjust = 0.5)) +
+  # Data-labels for ambiguity (Midhight + Midlow)
     geom_text(data = freq_table_2, 
           aes(label = scales::percent(Midlow + Midhigh, accuracy = 1), 
               x = Country, 
               y = 0),
-            size = 3, color = grey(.2))</code></pre>
-<p>Unfortunately, if you try to use the same function with lows dataframe, the labels will be ill-positioned. The “position = position_stack” parameter won’t work correctly. I hope this will be improved with one of the ggplot updates in the future. In the meantime, one needs to calculate the positions of lows labels manually.</p>
-</div>
-<div id="adding-data-labels." class="section level2">
-<h2>3. Adding data-labels.</h2>
-<p>In order to do so, you need to go back to freq_table_2 and assign a pair of variables (one for “disagree”&quot; and another one for “strongly disagree”). Next, you need to repete some steps from data preparation part and integrate the two variables into one via ifelse statment:</p>
-<pre class="r"><code># Attaching a pair of variable for data-label_position (for &quot;Disagree&quot; and &quot;Strongly disagree&quot; respectively)
-freq_table_2 &lt;- freq_table_2 %&gt;% 
-  mutate(label_position = - Midlow - Disagree/2,
-         label_position_2 = - Midlow - Disagree - `Strongly disagree`/2)
-
-# Transforming data-frame into a long format
-freq_table_long_2 &lt;- freq_table_2 %&gt;% 
-  gather(key = &quot;key&quot;, value = &quot;value&quot;, 2:7, - Country, - label_position, - label_position_2)
-
-# Ordering the stacking of bars (answers) on the plot
-freq_table_long_2$key &lt;- factor(freq_table_long_2$key, 
-                                levels = c(&quot;Strongly disagree&quot;,
-                                           &quot;Disagree&quot;,
-                                           &quot;Midlow&quot;, 
-                                           &quot;Midhigh&quot;,
-                                           &quot;Agree&quot;, 
-                                           &quot;Strongly agree&quot;)) 
-
-# Ordering the bars (Countries) on the plot
-freq_table_long_2$Country &lt;- factor(freq_table_long_2$Country,
-                                    levels = freq_table_2$Country[order(-(freq_table_2[, 5] + freq_table_2[, 6] + freq_table_2[, 7]))]) 
-
-# Integrating label_position variable into one
-freq_table_long_2 &lt;- freq_table_long_2 %&gt;% 
-  mutate(label_position = ifelse(key == &quot;Strongly disagree&quot;, label_position_2, label_position))
-
-# Defining a color of stacked bars (answers)
-freq_table_long_2$color &lt;- rep(palette_plot, each = length(unique(freq_table_long_2$Country)))
-
-# Re-creation of lows data-frame
-lows &lt;- freq_table_long_2[1:(nrow(freq_table_long_2)/2),]
-lows$key &lt;- factor(lows$key, levels = c(&quot;Strongly disagree&quot;, &quot;Disagree&quot;, &quot;Midlow&quot;))</code></pre>
-<p>Finally we can add data-labels for negative bars as well.</p>
+            size = 3, color = grey(.2)) +
+  scale_color_manual(values = palette_labels, guide = FALSE)</code></pre>
+<p>Unfortunately, if you try to use the same function with lows dataframe, the labels will be ill-positioned. The “position = position_stack” parameter won’t work correctly. I hope this will be improved with one of the ggplot updates in the future. Fortunately, we have already calculated the positions of data-labels for negative answers (data-preparation step) and stored them in label_position variable. We can use it in the following way.</p>
 <pre class="r"><code>chart &lt;- chart +
+  # Data-labels for negative answers
     geom_text(data = lows, 
               aes(label = ifelse(key == &quot;Midlow&quot; | value &lt;= 0.05, &quot;&quot;, percent(value, accuracy = 1)),
                   x = Country, 
-                  y = label_position),
-              size = 3, color = grey(.2))
+                  y = label_position,
+                  color = factor(label_color)),
+              size = 3) 
+chart</code></pre>
+<p><img src="plots_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+<div id="step-4.-styling-of-the-chart." class="section level2">
+<h2>Step 4. Styling of the chart.</h2>
+<p>And some final touches. Let’s clean the plot from unnecessary non-data ink. And put some title, subtitle and caption to it. The exact dimentions could be corrected by trial ane error method directly in RStudio.</p>
+<pre class="r"><code>chart &lt;- chart +
+  labs(title = &quot;To what extent do you agree with the statment&quot;,
+       subtitle = &quot;Asked to 14 000 people who, ...&quot;,
+       caption = &quot;Some source&quot;) +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title = element_blank(),
+        legend.position = &quot;top&quot;,
+        text = element_text(color = grey(.2)))
 chart</code></pre>
 <p><img src="plots_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 </div>

@@ -1,8 +1,8 @@
 name: my-website
 navbar:
-  title: Miscellanea blog
+  title: Analyzing survey data with R
   left:
-  - text: Home
+  - text: Basics
     href: index.html
   - text: Likert plots
     href: plots.html

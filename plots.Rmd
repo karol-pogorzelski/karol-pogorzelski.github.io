@@ -1,18 +1,22 @@
 ---
 title: "How to create plot from Likert-scale data"
 ---
+It is quite common in surveys to ask respondends to reveal their attidute towards a particular opinion on a 5-point scale. For instance whether they (1) strongly agree, (2) agree, (3) neither agree, nor disagre, (4) disagree or (5) strongly disagree with it. Such scale could contain from 3 to 7 points of reference and is often called "Likert scale". 
 
-The answers in the example above are arranged on a 5-point Likert scale. This means that respondents indicate a degree to which they agree with a particular statement from 1 - "strongly disagree" to 5 - "strongly agree". However, a Likert scale could contain from 3 to 7 points of reference.
+There is one particular type of chart that nicely visualizes Likert-scale answers - the "diverging stacked bar chart". It's anchored in the middle of most "indifferent" part of survey sample.
+The position of each bar represents the balance of opinion. The more the bar is shifted to a particular direction, the more agreeable or disagreeable the population is. Thus multiple bars can be easily compared to each other. To be fair, people differ in their opinions towards this type of visualization. It's advantages are nicely explained [here](https://www.perceptualedge.com/blog/?p=2239) and [here](http://www.montana.edu/msse/Data_analysis/Likert%20Survey%20Graphs.pdf), but it is good to know also a [critical opinion](https://blog.datawrapper.de/divergingbars/). 
 
-A nice visualization of Likert-scale answers is a stacked bar chart anchored in the middle of most "indifferent" part of survey sample. The position of each bar represents the balance of opinion. The more the bar is shifted to a particular direction, the more agreeable or disagreeable the population is. Thus multiple bars can be easily compared to each other. Obtaining such plot requires, however, some effort. I have tried two ways of doing it: 
+Anyway, I like this type of plot and use it a lot. It wasn't easy though to learn how to create them with R. Therefore, I decide to share my method here. In general, there are two ways of creating such plot. 
 
 1. The first one is more tedious, but allows for more flexibility. It uses *ggplot2* package and "geom_bar" aestethics. You can find it's description here: http://rnotr.com/likert/ggplot/barometer/likert-plots/
 
 2. The second one comes from the same author (http://rnotr.com/likert/ggplot/barometer/likert-plotly/) and also uses *ggplot2* but with "geom_segment" aestethics. It is simpler and more concise, but also blocks "color" argument for other use on the chart. This might be a problem if you want to have data-labels on the chart and color them black on light background and white on dark background. 
 
+In the example below I will use the real data from [ING International Survey](https://www.ezonomics.com/ing_international_surveys). In one of the surveys (on Savings in 2017), the respondets were asked to indicate to what extent they agree or disagree with the following opinion: __"I sometimes run out of money"__. I will use the first of the methods I've mentioned above, because I like the flexibility that comes with it. 
+
 ## Step 1. Preparing data.
 
-Let's start with preparing some survey data, accoring to a recipe described in "Home" tab.
+Let's start with preparing the survey data, accoring to a recipe described in "Home" tab.
 ```{r eval = TRUE, include = TRUE, echo = TRUE}
 data_2 <- read.csv("survey_data.csv")
 answers <- names(wpct(data_2$Question, weight = data_2$WeightPerCountry))
@@ -22,7 +26,7 @@ freq_table_2 <- data_2 %>%
   mutate(answers = answers) %>% 
   spread(key = answers, `wpct(.$Question, .$WeightPerCountry, na.rm = TRUE)`)
 ```
-We've got a dataframe where each row denotes a country (15 total) and each column a percentage of people sharing a Likert-scale opinion to "Statement" 
+We've got a dataframe where each row denotes a country (15 total) and each column a percentage of people sharing a Likert-scale opinion to whether they sometimes run out of money.  
 ```{r message = FALSE, echo = FALSE, eval = TRUE}
 kable(head(freq_table_2), "html") %>% 
   kable_styling(bootstrap_options = "striped", 
@@ -198,9 +202,9 @@ And some final touches. Let's clean the plot from unnecessary non-data ink. And 
 
 ```{r message = FALSE, echo = TRUE, eval = TRUE}
 chart <- chart +
-  labs(title = "To what extent do you agree with the statment",
-       subtitle = "Asked to 14 000 people who, ...",
-       caption = "Some source") +
+  labs(title = "I sometimes run out of money",
+       subtitle = "Sample: 14 512 people, asked to what extent they agree or disagree with the statement",
+       caption = "ING International Survey") +
   theme_classic() +
   theme(axis.line = element_blank(),
         axis.ticks = element_blank(),

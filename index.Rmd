@@ -1,5 +1,5 @@
 ---
-title: "Analyzing survey data with R"
+title: "Basics"
 ---
 
 ## 1. How to tabulate in R frequencies of a survey answers (weighted)
@@ -50,7 +50,7 @@ Now let's do few finishing touches: (1) change ugly default name of second colum
 ```{r, eval = TRUE, include = TRUE, echo = TRUE}
 names(freq_table)[2] <- "frequency"
 freq_table$frequency <- freq_table$frequency %>% 
-  round(2)
+  percent(accuracy = 1)
 
 freq_table <- freq_table %>% 
   spread(key = answers, "frequency")
@@ -62,3 +62,44 @@ kable(freq_table, "html") %>%
                 full_width = FALSE, 
                 position = "left")
 ```
+
+## 2. Improving your code by writing functions. 
+
+Most of the surveys contain a number of similiar questions approaching a particular topic from different angles. If you'd like to tabulate them one by one, you'll find yourself repeating the same code over and over again. To make your code more clear and efficient it's worth to write your own functions that will wrap the most repetitive chunks of your code. 
+
+Writing your own functions sounds very proffessional, but is really easy. 
+1. You start with coming up with a name to your function - usually something self-explainable. 
+2. Next you assign a "function" to this name, open a round bracket an state the arguments this function should take (the bracket should close automatically).
+3. Next open a curly bracket and put a chunk of code that works, remembering of the arguments of the function.
+4. At the end of the function put "return", open a round bracket and name the object the function should return. 
+
+As an example I will create a function that build a table with weighted answers to a particular survey question grouped by Gender.
+
+```{r, eval = TRUE, include = TRUE, echo = TRUE}
+survey_tabler <- function(data, question){
+  answers <- names(wpct(pull(data[question]), weight = data$WeightPerCountry))
+  
+  freq_table <- data %>% 
+  group_by(Gender) %>%
+  do(as.data.frame(wpct(pull(.[question]), .$WeightPerCountry, na.rm = TRUE))) %>%
+  mutate(answers = answers)
+  
+  names(freq_table)[2] <- "frequency"
+  freq_table$frequency <- freq_table$frequency %>% 
+  percent(accuracy = 1)
+
+  freq_table <- freq_table %>% 
+  spread(key = answers, "frequency")
+  
+  return(freq_table)
+}
+```
+
+Now that we have our function, let's test it. 
+
+```{r, eval = TRUE, include = TRUE, echo = TRUE}
+
+survey_tabler(data, "Question")
+
+```
+

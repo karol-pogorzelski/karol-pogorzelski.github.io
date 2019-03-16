@@ -178,12 +178,12 @@ $(document).ready(function () {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Miscellanea blog</a>
+      <a class="navbar-brand" href="index.html">Analyzing survey data with R</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="index.html">Home</a>
+  <a href="index.html">Basics</a>
 </li>
 <li>
   <a href="plots.html">Likert plots</a>
@@ -208,15 +208,17 @@ $(document).ready(function () {
 </div>
 
 
-<p>The answers in the example above are arranged on a 5-point Likert scale. This means that respondents indicate a degree to which they agree with a particular statement from 1 - “strongly disagree” to 5 - “strongly agree”. However, a Likert scale could contain from 3 to 7 points of reference.</p>
-<p>A nice visualization of Likert-scale answers is a stacked bar chart anchored in the middle of most “indifferent” part of survey sample. The position of each bar represents the balance of opinion. The more the bar is shifted to a particular direction, the more agreeable or disagreeable the population is. Thus multiple bars can be easily compared to each other. Obtaining such plot requires, however, some effort. I have tried two ways of doing it:</p>
+<p>It is quite common in surveys to ask respondends to reveal their attidute towards a particular opinion on a 5-point scale. For instance whether they (1) strongly agree, (2) agree, (3) neither agree, nor disagre, (4) disagree or (5) strongly disagree with it. Such scale could contain from 3 to 7 points of reference and is often called “Likert scale”.</p>
+<p>There is one particular type of chart that nicely visualizes Likert-scale answers - the “diverging stacked bar chart”. It’s anchored in the middle of most “indifferent” part of survey sample. The position of each bar represents the balance of opinion. The more the bar is shifted to a particular direction, the more agreeable or disagreeable the population is. Thus multiple bars can be easily compared to each other. To be fair, people differ in their opinions towards this type of visualization. It’s advantages are nicely explained <a href="https://www.perceptualedge.com/blog/?p=2239">here</a> and <a href="http://www.montana.edu/msse/Data_analysis/Likert%20Survey%20Graphs.pdf">here</a>, but it is good to know also a <a href="https://blog.datawrapper.de/divergingbars/">critical opinion</a>.</p>
+<p>Anyway, I like this type of plot and use it a lot. It wasn’t easy though to learn how to create them with R. Therefore, I decide to share my method here. In general, there are two ways of creating such plot.</p>
 <ol style="list-style-type: decimal">
 <li><p>The first one is more tedious, but allows for more flexibility. It uses <em>ggplot2</em> package and “geom_bar” aestethics. You can find it’s description here: <a href="http://rnotr.com/likert/ggplot/barometer/likert-plots/" class="uri">http://rnotr.com/likert/ggplot/barometer/likert-plots/</a></p></li>
 <li><p>The second one comes from the same author (<a href="http://rnotr.com/likert/ggplot/barometer/likert-plotly/" class="uri">http://rnotr.com/likert/ggplot/barometer/likert-plotly/</a>) and also uses <em>ggplot2</em> but with “geom_segment” aestethics. It is simpler and more concise, but also blocks “color” argument for other use on the chart. This might be a problem if you want to have data-labels on the chart and color them black on light background and white on dark background.</p></li>
 </ol>
+<p>In the example below I will use the real data from <a href="https://www.ezonomics.com/ing_international_surveys">ING International Survey</a>. In one of the surveys (on Savings in 2017), the respondets were asked to indicate to what extent they agree or disagree with the following opinion: <strong>“I sometimes run out of money”</strong>. I will use the first of the methods I’ve mentioned above, because I like the flexibility that comes with it.</p>
 <div id="step-1.-preparing-data." class="section level2">
 <h2>Step 1. Preparing data.</h2>
-<p>Let’s start with preparing some survey data, accoring to a recipe described in “Home” tab.</p>
+<p>Let’s start with preparing the survey data, accoring to a recipe described in “Home” tab.</p>
 <pre class="r"><code>data_2 &lt;- read.csv(&quot;survey_data.csv&quot;)
 answers &lt;- names(wpct(data_2$Question, weight = data_2$WeightPerCountry))
 freq_table_2 &lt;- data_2 %&gt;% 
@@ -224,7 +226,8 @@ freq_table_2 &lt;- data_2 %&gt;%
   do(as.data.frame(wpct(.$Question, .$WeightPerCountry, na.rm = TRUE))) %&gt;%
   mutate(answers = answers) %&gt;% 
   spread(key = answers, `wpct(.$Question, .$WeightPerCountry, na.rm = TRUE)`)</code></pre>
-We’ve got a dataframe where each row denotes a country (15 total) and each column a percentage of people sharing a Likert-scale opinion to “Statement”
+We’ve got a dataframe where each row denotes a country (15 total) and each column a percentage of people sharing a Likert-scale opinion to whether they sometimes run out of money.<br />
+
 <table class="table table-striped" style="width: auto !important; ">
 <thead>
 <tr>
@@ -254,19 +257,19 @@ Strongly disagree
 Australia
 </td>
 <td style="text-align:right;">
-0.4432163
+0.2392064
 </td>
 <td style="text-align:right;">
-0.1307912
+0.2557912
 </td>
 <td style="text-align:right;">
-0.2460460
+0.2394660
 </td>
 <td style="text-align:right;">
-0.1347252
+0.0842320
 </td>
 <td style="text-align:right;">
-0.0452213
+0.1813044
 </td>
 </tr>
 <tr>
@@ -274,19 +277,19 @@ Australia
 Austria
 </td>
 <td style="text-align:right;">
-0.3768841
+0.2237938
 </td>
 <td style="text-align:right;">
-0.1106368
+0.2535581
 </td>
 <td style="text-align:right;">
-0.1910697
+0.1932286
 </td>
 <td style="text-align:right;">
-0.2547108
+0.1015034
 </td>
 <td style="text-align:right;">
-0.0666986
+0.2279161
 </td>
 </tr>
 <tr>
@@ -294,19 +297,19 @@ Austria
 Belgium
 </td>
 <td style="text-align:right;">
-0.3926761
+0.2313389
 </td>
 <td style="text-align:right;">
-0.1253283
+0.2373775
 </td>
 <td style="text-align:right;">
-0.2796286
+0.2780002
 </td>
 <td style="text-align:right;">
-0.1437738
+0.0931191
 </td>
 <td style="text-align:right;">
-0.0585932
+0.1601644
 </td>
 </tr>
 <tr>
@@ -314,19 +317,19 @@ Belgium
 Czech Republic
 </td>
 <td style="text-align:right;">
-0.3928110
+0.2897621
 </td>
 <td style="text-align:right;">
-0.2617478
+0.3515953
 </td>
 <td style="text-align:right;">
-0.1604267
+0.1286656
 </td>
 <td style="text-align:right;">
-0.0889059
+0.0635708
 </td>
 <td style="text-align:right;">
-0.0961085
+0.1664062
 </td>
 </tr>
 <tr>
@@ -334,19 +337,19 @@ Czech Republic
 France
 </td>
 <td style="text-align:right;">
-0.3553662
+0.2519479
 </td>
 <td style="text-align:right;">
-0.1758601
+0.2392816
 </td>
 <td style="text-align:right;">
-0.2659228
+0.2671715
 </td>
 <td style="text-align:right;">
-0.1140069
+0.1137671
 </td>
 <td style="text-align:right;">
-0.0888440
+0.1278319
 </td>
 </tr>
 <tr>
@@ -354,19 +357,19 @@ France
 Germany
 </td>
 <td style="text-align:right;">
-0.3754572
+0.1854536
 </td>
 <td style="text-align:right;">
-0.1063672
+0.2303102
 </td>
 <td style="text-align:right;">
-0.2299037
+0.2490855
 </td>
 <td style="text-align:right;">
-0.2357029
+0.0846774
 </td>
 <td style="text-align:right;">
-0.0525690
+0.2504733
 </td>
 </tr>
 </tbody>
@@ -430,16 +433,16 @@ label_color
 Australia
 </td>
 <td style="text-align:right;">
--0.2764248
+-0.4661764
 </td>
 <td style="text-align:right;">
--0.2764248
+-0.4661764
 </td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
-0.0452213
+0.1813044
 </td>
 <td style="text-align:left;">
 a
@@ -450,16 +453,16 @@ a
 Austria
 </td>
 <td style="text-align:right;">
--0.2395210
+-0.4641305
 </td>
 <td style="text-align:right;">
--0.2395210
+-0.4641305
 </td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
-0.0666986
+0.2279161
 </td>
 <td style="text-align:left;">
 a
@@ -470,16 +473,16 @@ a
 Belgium
 </td>
 <td style="text-align:right;">
--0.2944392
+-0.4564598
 </td>
 <td style="text-align:right;">
--0.2944392
+-0.4564598
 </td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
-0.0585932
+0.1601644
 </td>
 <td style="text-align:left;">
 a
@@ -490,16 +493,16 @@ a
 Czech Republic
 </td>
 <td style="text-align:right;">
--0.3900154
+-0.4991312
 </td>
 <td style="text-align:right;">
--0.3900154
+-0.4991312
 </td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
-0.0961085
+0.1664062
 </td>
 <td style="text-align:left;">
 a
@@ -510,16 +513,16 @@ a
 France
 </td>
 <td style="text-align:right;">
--0.3532435
+-0.4367833
 </td>
 <td style="text-align:right;">
--0.3532435
+-0.4367833
 </td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
-0.0888440
+0.1278319
 </td>
 <td style="text-align:left;">
 a
@@ -530,16 +533,16 @@ a
 Germany
 </td>
 <td style="text-align:right;">
--0.2476035
+-0.4800896
 </td>
 <td style="text-align:right;">
--0.2476035
+-0.4800896
 </td>
 <td style="text-align:left;">
 Strongly disagree
 </td>
 <td style="text-align:right;">
-0.0525690
+0.2504733
 </td>
 <td style="text-align:left;">
 a
@@ -642,9 +645,9 @@ chart</code></pre>
 <h2>Step 4. Styling of the chart.</h2>
 <p>And some final touches. Let’s clean the plot from unnecessary non-data ink. And put some title, subtitle and caption to it. The exact dimentions could be corrected by trial ane error method directly in RStudio.</p>
 <pre class="r"><code>chart &lt;- chart +
-  labs(title = &quot;To what extent do you agree with the statment&quot;,
-       subtitle = &quot;Asked to 14 000 people who, ...&quot;,
-       caption = &quot;Some source&quot;) +
+  labs(title = &quot;I sometimes run out of money&quot;,
+       subtitle = &quot;Sample: 14 512 people, asked to what extent they agree or disagree with the statement&quot;,
+       caption = &quot;ING International Survey&quot;) +
   theme_classic() +
   theme(axis.line = element_blank(),
         axis.ticks = element_blank(),

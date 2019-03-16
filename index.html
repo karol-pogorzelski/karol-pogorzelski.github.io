@@ -11,7 +11,7 @@
 
 
 
-<title>Analyzing survey data with R</title>
+<title>Basics</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -178,12 +178,12 @@ $(document).ready(function () {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Miscellanea blog</a>
+      <a class="navbar-brand" href="index.html">Analyzing survey data with R</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="index.html">Home</a>
+  <a href="index.html">Basics</a>
 </li>
 <li>
   <a href="plots.html">Likert plots</a>
@@ -203,7 +203,7 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Analyzing survey data with R</h1>
+<h1 class="title toc-ignore">Basics</h1>
 
 </div>
 
@@ -251,7 +251,7 @@ Germany
 Woman
 </td>
 <td style="text-align:left;">
-Agree
+Neither agree nor disagree
 </td>
 </tr>
 <tr>
@@ -271,7 +271,7 @@ Poland
 Woman
 </td>
 <td style="text-align:left;">
-Strongly agree
+Strongly disagree
 </td>
 </tr>
 <tr>
@@ -291,7 +291,7 @@ NA
 Woman
 </td>
 <td style="text-align:left;">
-Strongly agree
+Strongly disagree
 </td>
 </tr>
 <tr>
@@ -331,7 +331,7 @@ United Kingdom
 Woman
 </td>
 <td style="text-align:left;">
-Agree
+Disagree
 </td>
 </tr>
 <tr>
@@ -351,7 +351,7 @@ Netherlands
 Man
 </td>
 <td style="text-align:left;">
-Disagree
+Neither agree nor disagree
 </td>
 </tr>
 </tbody>
@@ -369,11 +369,11 @@ Disagree
 freq_table$. &lt;- freq_table$. %&gt;% scales::percent()
 freq_table</code></pre>
 <pre><code>##                                .
-## Agree                      39.0%
-## Disagree                   14.7%
-## Neither agree nor disagree 23.5%
-## Strongly agree             15.8%
-## Strongly disagree           7.0%</code></pre>
+## Agree                      25.8%
+## Disagree                   25.0%
+## Neither agree nor disagree 21.9%
+## Strongly agree              9.8%
+## Strongly disagree          17.5%</code></pre>
 <p>Now, let’s complicate things a bit. I suppose we would like to see how these percentages differ for various subpopulations, in our example: men vs women. First let’s save a list of answers to variable, for later use.</p>
 <pre class="r"><code>answers &lt;- names(wpct(data$Question, weight = data$WeightPerCountry))</code></pre>
 <p>We need to apply wpct to each answer and each group separately. Fortunately, with a little trick we can pass wpct into margritr pipes, so we don’t need to resolve to loops. The trick is to use “do” function.</p>
@@ -384,7 +384,7 @@ freq_table</code></pre>
 <p>Now let’s do few finishing touches: (1) change ugly default name of second column, (2) round fractions to double-digits and (3) spread the table to make comparisons easier.</p>
 <pre class="r"><code>names(freq_table)[2] &lt;- &quot;frequency&quot;
 freq_table$frequency &lt;- freq_table$frequency %&gt;% 
-  round(2)
+  percent(accuracy = 1)
 
 freq_table &lt;- freq_table %&gt;% 
   spread(key = answers, &quot;frequency&quot;)</code></pre>
@@ -395,19 +395,19 @@ And voila…
 <th style="text-align:left;">
 Gender
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 Agree
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 Disagree
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 Neither agree nor disagree
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 Strongly agree
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 Strongly disagree
 </th>
 </tr>
@@ -417,44 +417,75 @@ Strongly disagree
 <td style="text-align:left;">
 Man
 </td>
-<td style="text-align:right;">
-0.40
+<td style="text-align:left;">
+23%
 </td>
-<td style="text-align:right;">
-0.13
+<td style="text-align:left;">
+25%
 </td>
-<td style="text-align:right;">
-0.24
+<td style="text-align:left;">
+23%
 </td>
-<td style="text-align:right;">
-0.18
+<td style="text-align:left;">
+8%
 </td>
-<td style="text-align:right;">
-0.06
+<td style="text-align:left;">
+20%
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
 Woman
 </td>
-<td style="text-align:right;">
-0.38
+<td style="text-align:left;">
+28%
 </td>
-<td style="text-align:right;">
-0.17
+<td style="text-align:left;">
+25%
 </td>
-<td style="text-align:right;">
-0.23
+<td style="text-align:left;">
+21%
 </td>
-<td style="text-align:right;">
-0.14
+<td style="text-align:left;">
+11%
 </td>
-<td style="text-align:right;">
-0.08
+<td style="text-align:left;">
+15%
 </td>
 </tr>
 </tbody>
 </table>
+</div>
+<div id="improving-your-code-by-writing-functions." class="section level2">
+<h2>2. Improving your code by writing functions.</h2>
+<p>Most of the surveys contain a number of similiar questions approaching a particular topic from different angles. If you’d like to tabulate them one by one, you’ll find yourself repeating the same code over and over again. To make your code more clear and efficient it’s worth to write your own functions that will wrap the most repetitive chunks of your code.</p>
+<p>Writing your own functions sounds very proffessional, but is really easy. 1. You start with coming up with a name to your function - usually something self-explainable. 2. Next you assign a “function” to this name, open a round bracket an state the arguments this function should take (the bracket should close automatically). 3. Next open a curly bracket and put a chunk of code that works, remembering of the arguments of the function. 4. At the end of the function put “return”, open a round bracket and name the object the function should return.</p>
+<p>As an example I will create a function that build a table with weighted answers to a particular survey question grouped by Gender.</p>
+<pre class="r"><code>survey_tabler &lt;- function(data, question){
+  answers &lt;- names(wpct(pull(data[question]), weight = data$WeightPerCountry))
+  
+  freq_table &lt;- data %&gt;% 
+  group_by(Gender) %&gt;%
+  do(as.data.frame(wpct(pull(.[question]), .$WeightPerCountry, na.rm = TRUE))) %&gt;%
+  mutate(answers = answers)
+  
+  names(freq_table)[2] &lt;- &quot;frequency&quot;
+  freq_table$frequency &lt;- freq_table$frequency %&gt;% 
+  percent(accuracy = 1)
+
+  freq_table &lt;- freq_table %&gt;% 
+  spread(key = answers, &quot;frequency&quot;)
+  
+  return(freq_table)
+}</code></pre>
+<p>Now that we have our function, let’s test it.</p>
+<pre class="r"><code>survey_tabler(data, &quot;Question&quot;)</code></pre>
+<pre><code>## # A tibble: 2 x 6
+## # Groups:   Gender [2]
+##   Gender Agree Disagree `Neither agree ~ `Strongly agree` `Strongly disag~
+##   &lt;fct&gt;  &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;           
+## 1 Man    23%   25%      23%              8%               20%             
+## 2 Woman  28%   25%      21%              11%              15%</code></pre>
 </div>
 
 
